@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - Chabok WHOIS</title>
+  <link rel="stylesheet" href="popup.css">
+  <style>
+    .settings-container {
+      padding: 20px;
+      max-width: 420px;
+    }
+    
+    .settings-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid var(--border-color);
+    }
+    
+    .back-btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.3s;
+    }
+    
+    .back-btn:hover {
+      background: var(--primary-dark);
+    }
+    
+    .settings-header h2 {
+      flex: 1;
+      margin: 0;
+      color: var(--text-primary);
+    }
+    
+    .settings-group {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 15px;
+    }
+    
+    .settings-group h3 {
+      margin: 0 0 15px 0;
+      color: var(--primary-color);
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .setting-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .setting-item:last-child {
+      border-bottom: none;
+    }
+    
+    .setting-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .setting-label strong {
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .setting-label small {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+    
+    .setting-control select {
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      background: white;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      min-width: 120px;
+    }
+    
+    .setting-control select:focus {
+      outline: none;
+      border-color: var(--primary-color);
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 50px;
+      height: 26px;
+      background: var(--border-color);
+      border-radius: 13px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .toggle-switch.active {
+      background: var(--primary-color);
+    }
+    
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      top: 2px;
+      right: 2px;
+      transition: all 0.3s;
+    }
+    
+    .toggle-switch.active::after {
+      right: 26px;
+    }
+    
+    .save-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--success);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-top: 20px;
+    }
+    
+    .save-btn:hover {
+      background: #059669;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+    
+    .saved-message {
+      text-align: center;
+      padding: 10px;
+      background: var(--success);
+      color: white;
+      border-radius: 8px;
+      margin-top: 15px;
+      display: none;
+      animation: fadeIn 0.3s;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+  <div class="settings-container">
+    <div class="settings-header">
+      <button class="back-btn" id="backBtn" data-i18n="back">← Back</button>
+      <h2 data-i18n="settingsTitle">⚙️ Settings</h2>
+    </div>
+
+    <!-- Language Settings -->
+    <div class="settings-group">
+      <h3 data-i18n="languageSection">🌐 Language</h3>
+      <div class="setting-item">
+        <div class="setting-label">
+          <strong data-i18n="languageLabel">Interface Language</strong>
+          <small data-i18n="languageDesc">Language for displaying information</small>
+        </div>
+        <div class="setting-control">
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="fa">فارسی</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Display Settings -->
+    <div class="settings-group">
+      <h3 data-i18n="displaySection">🎨 Display</h3>
+      <div class="setting-item">
+        <div class="setting-label">
+          <strong data-i18n="flagIconLabel">Show Flag as Icon</strong>
+          <small data-i18n="flagIconDesc">Extension icon changes to country flag</small>
+        </div>
+        <div class="setting-control">
+          <div class="toggle-switch active" id="flagIconToggle"></div>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <div class="setting-label">
+          <strong data-i18n="themeLabel">Color Theme</strong>
+          <small data-i18n="themeDesc">Interface color theme</small>
+        </div>
+        <div class="setting-control">
+          <select id="themeSelect">
+            <option value="default" data-i18n="themeDefault">Default (Orange)</option>
+            <option value="blue" data-i18n="themeBlue">Blue</option>
+            <option value="green" data-i18n="themeGreen">Green</option>
+            <option value="purple" data-i18n="themePurple">Purple</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Settings -->
+    <div class="settings-group">
+      <h3 data-i18n="dataSection">💾 Data</h3>
+      <div class="setting-item">
+        <div class="setting-label">
+          <strong data-i18n="cacheLabel">Enable Cache</strong>
+          <small data-i18n="cacheDesc">Cache data for faster loading</small>
+        </div>
+        <div class="setting-control">
+          <div class="toggle-switch active" id="cacheToggle"></div>
+        </div>
+      </div>
+      
+      <div class="setting-item">
+        <div class="setting-label">
+          <strong data-i18n="cacheDurationLabel">Cache Duration</strong>
+          <small data-i18n="cacheDurationDesc">How long to keep cached data</small>
+        </div>
+        <div class="setting-control">
+          <select id="cacheDurationSelect">
+            <option value="60000" data-i18n="duration1min">1 minute</option>
+            <option value="300000" data-i18n="duration5min">5 minutes</option>
+            <option value="600000" data-i18n="duration10min">10 minutes</option>
+            <option value="1800000" data-i18n="duration30min">30 minutes</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <button class="save-btn" id="saveBtn" data-i18n="saveSettings">💾 Save Settings</button>
+    <div class="saved-message" id="savedMessage" data-i18n="settingsSaved">✅ Settings saved successfully!</div>
+  </div>
+
+  <script src="translations.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>
+

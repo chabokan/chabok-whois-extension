@@ -1,0 +1,59 @@
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Node (اگر در آینده استفاده شد)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Temporary Files
+*.tmp
+*.temp
+*.log
+*.cache
+
+# Build/Dist
+dist/
+build/
+*.zip
+*.crx
+*.xpi
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# Test Coverage
+coverage/
+.nyc_output/
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Private Keys
+*.pem
+*.key
+private/
+secrets/
+
+# macOS
+__MACOSX/
