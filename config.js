@@ -1,27 +1,25 @@
-// تنظیمات Backend
+// Backend Configuration
 const CONFIG = {
-  // URL سرور backend
+  // Backend server URL - Update this to your backend URL
   BACKEND_URL: 'https://chabokan.net/domain-data/',
   
-  // می‌توانید چند backend برای fallback داشته باشید
-  FALLBACK_BACKENDS: [
-    // سرورهای پشتیبان در صورت نیاز...
-  ],
+  // Fallback backends (optional)
+  FALLBACK_BACKENDS: [],
   
-  // Timeout برای درخواست‌ها (میلی‌ثانیه)
+  // Request timeout (milliseconds)
   REQUEST_TIMEOUT: 15000,
   
-  // فعال/غیرفعال کردن cache
+  // Cache settings
   ENABLE_CACHE: true,
-  CACHE_DURATION: 300000, // 5 دقیقه
+  CACHE_DURATION: 300000, // 5 minutes
 };
 
-// تابع برای دریافت URL backend
+// Get backend URL
 function getBackendURL() {
   return CONFIG.BACKEND_URL;
 }
 
-// تابع برای دریافت اطلاعات دامنه از backend
+// Fetch domain information from backend
 async function fetchFromBackend(domain) {
   const url = `${getBackendURL()}?domain=${encodeURIComponent(domain)}`;
   
@@ -41,14 +39,12 @@ async function fetchFromBackend(domain) {
     const data = await response.json();
     
     if (data.success) {
-      return data.data;
+      return data;
     } else {
       throw new Error(data.error || 'Backend error');
     }
   } catch (error) {
-    console.error('Backend fetch error:', error);
-    
-    // تلاش با fallback servers
+    // Try fallback servers
     for (const fallbackURL of CONFIG.FALLBACK_BACKENDS) {
       try {
         const url = `${fallbackURL}?domain=${encodeURIComponent(domain)}`;
@@ -60,15 +56,14 @@ async function fetchFromBackend(domain) {
         if (response.ok) {
           const data = await response.json();
           if (data.success) {
-            return data.data;
+            return data;
           }
         }
       } catch (e) {
-        console.log('Fallback also failed:', e);
+        // Continue to next fallback
       }
     }
     
     throw error;
   }
 }
-

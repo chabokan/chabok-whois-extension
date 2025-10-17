@@ -44,14 +44,10 @@ function calculateDomainAge(createdDate) {
   }
 }
 
-// محاسبه روزهای باقی‌مانده تا انقضا
 function calculateDaysRemaining(expiryDate) {
   if (!expiryDate) return null;
   return formatRemainingTime(expiryDate, window.currentLanguage || 'en');
 }
-
-// آیکون توسط background.js مدیریت می‌شود
-// این تابع دیگر استفاده نمی‌شود
 
 function showError(message) {
   const loadingContainer = document.getElementById('loadingContainer');
@@ -71,297 +67,14 @@ function showContent() {
   contentContainer.style.display = 'block';
 }
 
-// API functions
-async function fetchWithTimeout(url, timeout = 15000, isDNS = false) {
-  const controller = new AbortController();
-  const id = setTimeout(() => controller.abort(), timeout);
-  
-  try {
-    const headers = {
-      'Accept': 'application/json',
-    };
-    
-    // برای DNS over HTTPS، header خاص اضافه می‌کنیم
-    if (isDNS) {
-      headers['accept'] = 'application/dns-json';
-    }
-    
-    const response = await fetch(url, {
-      signal: controller.signal,
-      headers: headers,
-      mode: 'cors',
-      cache: 'no-cache'
-    });
-    clearTimeout(id);
-    return response;
-  } catch (error) {
-    clearTimeout(id);
-    throw error;
-  }
-}
-
-// استفاده از روش‌های ساده که در Extension کار می‌کنند
-async function getIPAddresses(domain) {
-  const ips = [];
-  
-  try {
-    // روش 1: فقط نمایش اطلاعات اولیه از URL
-    // در واقع ما نمی‌توانیم IP را بدون سرویس خارجی بگیریم
-    // پس از اطلاعات موجود استفاده می‌کنیم
-    
-    console.log(`Attempting to resolve ${domain}`);
-    
-    // از آنجایی که API های عمومی مسدود هستند،
-    // ما فقط می‌توانیم اطلاعات محدودی نمایش دهیم
-    
-    // نمایش یک IP placeholder
-    console.log('Limited DNS resolution available');
-    
-    // اگر کاربر با VPN است، از crt.sh برای تخمین استفاده می‌کنیم
-    try {
-      const response = await fetchWithTimeout(
-        `https://crt.sh/?q=${domain}&output=json`,
-        8000
-      );
-      
-      if (response.ok) {
-        console.log('Certificate data available for additional info');
-      }
-    } catch (e) {
-      console.log('Certificate lookup not available');
-    }
-    
-    console.log('IP lookup completed with available methods');
-    return ips;
-  } catch (error) {
-    console.error('Error fetching IPs:', error);
-    return [];
-  }
-}
-
-async function getIPInfo(ip) {
-  try {
-    // روش 1: استفاده از ipwhois.app (رایگان کامل)
-    try {
-      const response = await fetchWithTimeout(
-        `http://ipwho.is/${ip}`,
-        10000
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success !== false) {
-          return {
-            country: data.country_code || 'نامشخص',
-            countryName: data.country || 'نامشخص',
-            isp: data.connection?.isp || data.connection?.org || 'نامشخص',
-            hostname: data.connection?.domain || 'نامشخص'
-          };
-        }
-      }
-    } catch (e) {
-      console.log('ipwho.is failed:', e);
-    }
-    
-    // روش 2: استفاده از ip-api (بدون https)
-    try {
-      const response = await fetchWithTimeout(
-        `http://ip-api.com/json/${ip}?fields=status,country,countryCode,city,isp,org,as,query`,
-        10000
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.status === 'success') {
-          return {
-            country: data.countryCode || 'نامشخص',
-            countryName: data.country || 'نامشخص',
-            isp: data.org || data.isp || 'نامشخص',
-            hostname: data.isp || 'نامشخص'
-          };
-        }
-      }
-    } catch (e) {
-      console.log('ip-api.com failed:', e);
-    }
-    
-    // روش 3: استفاده از geoplugin
-    try {
-      const response = await fetchWithTimeout(
-        `http://www.geoplugin.net/json.gp?ip=${ip}`,
-        10000
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        return {
-          country: data.geoplugin_countryCode || 'نامشخص',
-          countryName: data.geoplugin_countryName || 'نامشخص',
-          isp: 'نامشخص',
-          hostname: 'نامشخص'
-        };
-      }
-    } catch (e) {
-      console.log('geoplugin failed:', e);
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error fetching IP info:', error);
-    return null;
-  }
-}
-
-async function getNSRecords(domain) {
-  const nsRecords = new Set();
-  
-  try {
-    // روش 1: استفاده از viewdns.info
-    try {
-      const response = await fetchWithTimeout(
-        `https://viewdns.info/dnsrecord/?domain=${domain}`,
-        10000
-      );
-      
-      if (response.ok) {
-        const text = await response.text();
-        // جستجو برای NS records در HTML
-        const nsMatches = text.match(/NS Record:.*?<\/td>.*?<td[^>]*>(.*?)<\/td>/gi);
-        if (nsMatches) {
-          nsMatches.forEach(match => {
-            const nsMatch = match.match(/<td[^>]*>([a-z0-9\.-]+\.[a-z]{2,})<\/td>/i);
-            if (nsMatch && nsMatch[1]) {
-              nsRecords.add(nsMatch[1]);
-            }
-          });
-        }
-      }
-    } catch (e) {
-      console.log('ViewDNS NS lookup failed:', e);
-    }
-    
-    // روش 2: استفاده از who.is
-    if (nsRecords.size === 0) {
-      try {
-        const response = await fetchWithTimeout(
-          `https://www.who.is/dns/${domain}`,
-          10000
-        );
-        
-        if (response.ok) {
-          const text = await response.text();
-          // جستجو برای NS patterns
-          const nsPattern = /ns\d*\.[a-z0-9\.-]+\.[a-z]{2,}/gi;
-          const matches = text.match(nsPattern);
-          if (matches) {
-            matches.forEach(ns => nsRecords.add(ns.toLowerCase()));
-          }
-        }
-      } catch (e) {
-        console.log('Who.is NS lookup failed:', e);
-      }
-    }
-    
-    console.log('Found NS records:', Array.from(nsRecords));
-    return Array.from(nsRecords);
-  } catch (error) {
-    console.error('Error fetching NS records:', error);
-    return [];
-  }
-}
-
-async function getSSLInfo(domain) {
-  try {
-    // Try crt.sh for SSL certificate info
-    try {
-      const response = await fetchWithTimeout(
-        `https://crt.sh/?q=${domain}&output=json`,
-        15000
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data && data.length > 0) {
-          // فیلتر کردن گواهی‌های منقضی نشده
-          const validCerts = data.filter(cert => {
-            const expiryDate = new Date(cert.not_after);
-            return expiryDate > new Date();
-          });
-          
-          if (validCerts.length > 0) {
-            // Get the certificate with latest expiry
-            const sortedCerts = validCerts.sort((a, b) => 
-              new Date(b.not_after) - new Date(a.not_after)
-            );
-            
-            const latestCert = sortedCerts[0];
-            
-            return {
-              expiryDate: latestCert.not_after,
-              issuer: latestCert.issuer_name || 'نامشخص',
-              validFrom: latestCert.not_before
-            };
-          }
-        }
-      }
-    } catch (e) {
-      console.log('crt.sh SSL lookup failed:', e);
-    }
-    
-    // Fallback: استفاده از API دیگر یا نمایش اطلاعات محدود
-    console.log('SSL info not available via API');
-    return null;
-  } catch (error) {
-    console.error('Error fetching SSL info:', error);
-    return null;
-  }
-}
-
-async function getDomainWhois(domain) {
-  try {
-    // استفاده از crt.sh برای تخمین عمر دامنه
-    try {
-      const response = await fetchWithTimeout(
-        `https://crt.sh/?q=${domain}&output=json`,
-        15000
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data && data.length > 0) {
-          // پیدا کردن قدیمی‌ترین گواهی
-          const sortedCerts = data.sort((a, b) => 
-            new Date(a.entry_timestamp) - new Date(b.entry_timestamp)
-          );
-          
-          const oldestCert = sortedCerts[0];
-          
-          return {
-            createdDate: oldestCert.entry_timestamp,
-            expiryDate: null // Domain expiry is different from cert expiry
-          };
-        }
-      }
-    } catch (e) {
-      console.log('crt.sh domain age lookup failed:', e);
-    }
-    
-    console.log('Domain age info not available');
-    return null;
-  } catch (error) {
-    console.error('Error fetching WHOIS info:', error);
-    return null;
-  }
-}
+// fetchFromBackend is defined in config.js
 
 // Display functions
 function displayIPAddresses(ips) {
   const container = document.getElementById('ipAddresses');
   
   if (!ips || ips.length === 0) {
-    container.innerHTML = '<div class="ip-item">هیچ آدرس IP یافت نشد</div>';
+    container.innerHTML = `<div class="ip-item">${t('noIPFound')}</div>`;
     return;
   }
   
@@ -376,7 +89,6 @@ function displayIPAddresses(ips) {
 function displayLocationInfo(info, countryCode) {
   const flag = getCountryFlag(countryCode);
   
-  // نمایش نام کشور
   const countryElement = document.getElementById('country');
   if (info && (info.countryName || countryCode)) {
     countryElement.innerHTML = `
@@ -384,16 +96,14 @@ function displayLocationInfo(info, countryCode) {
       ${info.countryName || countryCode}
     `;
   } else {
-    countryElement.textContent = 'نامشخص';
+    countryElement.textContent = t('unknown');
   }
   
-  // نمایش ISP
   const ispElement = document.getElementById('isp');
-  ispElement.textContent = (info && info.isp) ? info.isp : 'نامشخص';
+  ispElement.textContent = (info && info.isp) ? info.isp : t('unknown');
   
-  // نمایش Hostname
   const hostnameElement = document.getElementById('hostname');
-  hostnameElement.textContent = (info && info.hostname) ? info.hostname : 'نامشخص';
+  hostnameElement.textContent = (info && info.hostname) ? info.hostname : t('unknown');
 }
 
 function displayDomainInfo(whoisInfo) {
@@ -403,7 +113,7 @@ function displayDomainInfo(whoisInfo) {
   if (whoisInfo && whoisInfo.createdDate) {
     ageElement.textContent = calculateDomainAge(whoisInfo.createdDate);
   } else {
-    ageElement.textContent = 'نامشخص';
+    ageElement.textContent = t('unknown');
   }
   
   if (whoisInfo && whoisInfo.expiryDate) {
@@ -411,7 +121,7 @@ function displayDomainInfo(whoisInfo) {
     const daysRemaining = calculateDaysRemaining(whoisInfo.expiryDate);
     expiryElement.textContent = daysRemaining ? `${formattedDate} (${daysRemaining})` : formattedDate;
   } else {
-    expiryElement.textContent = 'نامشخص';
+    expiryElement.textContent = t('unknown');
   }
 }
 
@@ -424,7 +134,6 @@ function displaySSLInfo(sslInfo) {
     const daysRemaining = calculateDaysRemaining(sslInfo.expiryDate);
     expiryElement.textContent = daysRemaining ? `${formattedDate} (${daysRemaining})` : formattedDate;
     
-    // Simplify issuer name
     let issuerName = sslInfo.issuer;
     if (issuerName.includes('CN=')) {
       const cnMatch = issuerName.match(/CN=([^,]+)/);
@@ -434,8 +143,8 @@ function displaySSLInfo(sslInfo) {
     }
     issuerElement.textContent = issuerName;
   } else {
-    expiryElement.textContent = 'نامشخص';
-    issuerElement.textContent = 'نامشخص';
+    expiryElement.textContent = t('unknown');
+    issuerElement.textContent = t('unknown');
   }
 }
 
@@ -443,7 +152,7 @@ function displayNSRecords(nsRecords) {
   const container = document.getElementById('nsRecords');
   
   if (!nsRecords || nsRecords.length === 0) {
-    container.innerHTML = '<div class="ns-item">هیچ رکورد NS یافت نشد</div>';
+    container.innerHTML = `<div class="ns-item">${t('noNSFound')}</div>`;
     return;
   }
   
@@ -452,10 +161,9 @@ function displayNSRecords(nsRecords) {
   `).join('');
 }
 
-// Main function - استفاده از Backend
+// Main function
 async function loadDomainInfo() {
   try {
-    // Get current tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     
     if (!tab || !tab.url) {
@@ -463,7 +171,6 @@ async function loadDomainInfo() {
       return;
     }
     
-    // Extract domain (full hostname with subdomain)
     const domain = extractDomain(tab.url);
     
     if (!domain) {
@@ -471,23 +178,13 @@ async function loadDomainInfo() {
       return;
     }
     
-    // Display domain name
     document.getElementById('domainDisplay').textContent = domain;
-    
-    // Show content area
     showContent();
     
-    // دریافت اطلاعات از Backend
-    // Backend خودش تصمیم می‌گیرد کدام داده را از دامنه اصلی و کدام را از subdomain بگیرد
     try {
       const response = await fetchFromBackend(domain);
-      
-      console.log('📦 Backend response:', response);
-      
-      // Backend v2.0.0 returns data in 'data' object
       const backendData = response.data || response;
       
-      // نمایش IP ها
       if (backendData.ips && backendData.ips.length > 0) {
         displayIPAddresses(backendData.ips.map(ip => ({
           ip: ip.ip,
@@ -497,26 +194,23 @@ async function loadDomainInfo() {
         displayIPAddresses([]);
       }
       
-      // نمایش اطلاعات IP
       if (backendData.ip_info) {
         displayLocationInfo({
           country: backendData.ip_info.country_code,
           countryName: backendData.ip_info.country,
           isp: backendData.ip_info.isp,
-          hostname: backendData.ip_info.hostname || 'نامشخص'
+          hostname: backendData.ip_info.hostname || t('unknown')
         }, backendData.ip_info.country_code);
       } else {
         displayLocationInfo(null, null);
       }
       
-      // نمایش NS Records
       if (backendData.ns_records && backendData.ns_records.length > 0) {
         displayNSRecords(backendData.ns_records);
       } else {
         displayNSRecords([]);
       }
       
-      // نمایش اطلاعات SSL
       if (backendData.ssl_info && backendData.ssl_info.valid) {
         displaySSLInfo({
           expiryDate: backendData.ssl_info.valid_to,
@@ -527,7 +221,6 @@ async function loadDomainInfo() {
         displaySSLInfo(null);
       }
       
-      // نمایش عمر دامنه
       if (backendData.domain_age) {
         displayDomainInfo({
           createdDate: backendData.domain_age.created_date,
@@ -537,16 +230,11 @@ async function loadDomainInfo() {
         displayDomainInfo(null);
       }
       
-      // آیکون توسط background script تغییر می‌کند
-      // نیازی به تغییر دستی نیست
-      
     } catch (backendError) {
-      console.error('Backend error:', backendError);
       showError(t('errorServer'));
     }
     
   } catch (error) {
-    console.error('Error loading domain info:', error);
     showError(t('errorGeneric'));
   }
 }
@@ -558,12 +246,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 document.getElementById('refreshBtn').addEventListener('click', () => {
-  // Reset to loading state
   document.getElementById('loadingContainer').style.display = 'flex';
   document.getElementById('contentContainer').style.display = 'none';
   document.getElementById('errorContainer').style.display = 'none';
-  
-  // Reload data
   loadDomainInfo();
 });
 
@@ -571,7 +256,7 @@ document.getElementById('settingsBtn').addEventListener('click', () => {
   window.location.href = 'settings.html';
 });
 
-// Load and apply settings
+// Settings
 async function loadSettings() {
   try {
     const settings = await chrome.storage.sync.get({
@@ -582,21 +267,12 @@ async function loadSettings() {
       cacheDuration: 300000
     });
     
-    console.log('📚 Loading settings:', settings);
-    console.log('🌍 Selected language:', settings.language);
-    
-    // Store current language globally
     window.currentLanguage = settings.language;
     
-    // Apply language
     if (typeof applyTranslations === 'function') {
-      console.log('✅ Applying translations for:', settings.language);
       applyTranslations(settings.language);
-    } else {
-      console.error('❌ applyTranslations is not a function!');
     }
     
-    // Apply theme if needed
     if (settings.theme && settings.theme !== 'default') {
       applyTheme(settings.theme);
     }
@@ -604,14 +280,13 @@ async function loadSettings() {
     return settings;
     
   } catch (error) {
-    console.error('Error loading settings:', error);
     window.currentLanguage = 'en';
     applyTranslations('en');
     return { language: 'en', flagIcon: true, theme: 'default', cache: true, cacheDuration: 300000 };
   }
 }
 
-// Apply theme colors
+// Apply theme
 function applyTheme(theme) {
   const themes = {
     default: { primary: '#f16334', primaryDark: '#d94e1f' },
@@ -625,4 +300,3 @@ function applyTheme(theme) {
     document.documentElement.style.setProperty('--primary-dark', themes[theme].primaryDark);
   }
 }
-

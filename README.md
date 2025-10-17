@@ -1,57 +1,62 @@
 # 🔍 Chabok WHOIS Extension
 
-افزونه مرورگر برای نمایش اطلاعات دامنه و WHOIS
+Browser extension for displaying domain and WHOIS information.
 
-## ✨ ویژگی‌ها
+## Features
 
-- 🌍 **آیکون پویا**: آیکون Extension به پرچم کشور میزبان تبدیل می‌شود
-- 📍 **اطلاعات IP**: نمایش IP، ISP، Hostname و موقعیت جغرافیایی
-- 🔐 **اطلاعات SSL**: تاریخ انقضا، صادرکننده و اعتبار گواهینامه
-- 📅 **عمر دامنه**: تاریخ ثبت، تاریخ انقضا و عمر دامنه
-- 🌐 **NS Records**: نمایش Name Server های دامنه
-- 🌓 **چند زبانه**: پشتیبانی از فارسی و انگلیسی
-- 🎨 **تم‌های رنگی**: 4 تم مختلف (نارنجی، آبی، سبز، بنفش)
-- ⚡ **Cache هوشمند**: ذخیره موقت برای سرعت بیشتر
+- 🌍 **Dynamic Icon**: Extension icon changes to country flag
+- 📍 **IP Information**: IP, ISP, Hostname, and geographic location
+- 🔐 **SSL Information**: Certificate expiry, issuer, and validity
+- 📅 **Domain Age**: Registration date, expiry date, and domain age
+- 🌐 **NS Records**: Display domain name servers
+- 🌓 **Multi-language**: Persian and English support
+- 🎨 **Color Themes**: 4 different themes (Orange, Blue, Green, Purple)
+- ⚡ **Smart Cache**: Temporary storage for faster performance
 
-## 📦 نصب
+## Installation
 
 ### Chrome / Edge / Brave
 
-1. فایل‌های Extension را دانلود کنید
-2. `chrome://extensions/` را باز کنید
-3. "Developer mode" را فعال کنید
-4. "Load unpacked" را کلیک کنید
-5. پوشه Extension را انتخاب کنید
+1. Download extension files
+2. Open `chrome://extensions/`
+3. Enable "Developer mode"
+4. Click "Load unpacked"
+5. Select extension folder
 
 ### Firefox
 
-1. فایل‌های Extension را دانلود کنید
-2. `manifest.json` را به `manifest.v2.json` تغییر نام دهید
-3. `about:debugging#/runtime/this-firefox` را باز کنید
-4. "Load Temporary Add-on" را کلیک کنید
-5. فایل `manifest.v2.json` را انتخاب کنید
+1. Download extension files
+2. Rename `manifest.json` to `manifest.json.bak`
+3. Rename `manifest.v2.json` to `manifest.json`
+4. Open `about:debugging#/runtime/this-firefox`
+5. Click "Load Temporary Add-on"
+6. Select `manifest.json`
 
 
-## 🎯 نحوه استفاده
+## Usage
 
-1. به هر سایتی بروید
-2. آیکون Extension به پرچم کشور میزبان تبدیل می‌شود
-3. روی آیکون کلیک کنید تا اطلاعات کامل را ببینید
+1. Visit any website
+2. Extension icon changes to country flag
+3. Click icon to see complete information
 
-## 🔧 تنظیمات
+## Settings
 
-روی دکمه ⚙️ در گوشه بالا کلیک کنید:
+Click ⚙️ button in the corner:
 
-- **زبان**: فارسی یا انگلیسی
-- **نمایش پرچم**: خاموش/روشن کردن آیکون پرچم
-- **تم رنگی**: انتخاب از 4 تم مختلف
-- **Cache**: خاموش/روشن و تنظیم مدت زمان
+- **Language**: Persian or English
+- **Show Flag**: Enable/disable flag icon
+- **Color Theme**: Choose from 4 themes
+- **Cache**: Enable/disable and set duration
 
-## 📝 لایسنس
 
-این پروژه با لایسنس MIT منتشر شده است.
+## License
 
+MIT License
+
+## Contact
+
+Support: https://chabokan.net
 
 ---
 
-**ساخته شده با ❤️ توسط تیم چابکان**
+**Made with ❤️ by Chabokan**

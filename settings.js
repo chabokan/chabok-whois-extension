@@ -36,7 +36,6 @@ async function loadSettings() {
     document.getElementById('cacheDurationSelect').value = settings.cacheDuration;
     
   } catch (error) {
-    console.error('Error loading settings:', error);
   }
 }
 
@@ -64,7 +63,6 @@ async function saveSettings() {
     }, 3000);
     
   } catch (error) {
-    console.error('Error saving settings:', error);
     alert(t('errorGeneric'));
   }
 }

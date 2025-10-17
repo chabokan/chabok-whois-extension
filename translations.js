@@ -17,6 +17,7 @@ const translations = {
     ipv4: 'IPv4',
     ipv6: 'IPv6',
     noIPs: 'No IP addresses found',
+    noIPFound: 'No IP addresses found',
     
     // Location & ISP
     locationISP: 'Location & ISP',
@@ -30,6 +31,7 @@ const translations = {
     mailServers: 'Mail Servers',
     priority: 'Priority',
     noNameservers: 'No nameservers found',
+    noNSFound: 'No nameservers found',
     noMailServers: 'No mail servers found',
     
     // SSL Certificate
@@ -118,6 +120,7 @@ const translations = {
     ipv4: 'IPv4',
     ipv6: 'IPv6',
     noIPs: 'آدرس IP یافت نشد',
+    noIPFound: 'آدرس IP یافت نشد',
     
     // Location & ISP
     locationISP: 'موقعیت و ISP',
@@ -131,6 +134,7 @@ const translations = {
     mailServers: 'سرورهای ایمیل',
     priority: 'اولویت',
     noNameservers: 'نیم‌سرور یافت نشد',
+    noNSFound: 'نیم‌سرور یافت نشد',
     noMailServers: 'سرور ایمیل یافت نشد',
     
     // SSL Certificate
