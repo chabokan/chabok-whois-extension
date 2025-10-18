@@ -23,15 +23,6 @@ Browser extension for displaying domain and WHOIS information.
 4. Click "Load unpacked"
 5. Select extension folder
 
-### Firefox
-
-1. Download extension files
-2. Rename `manifest.json` to `manifest.json.bak`
-3. Rename `manifest.v2.json` to `manifest.json`
-4. Open `about:debugging#/runtime/this-firefox`
-5. Click "Load Temporary Add-on"
-6. Select `manifest.json`
-
 
 ## Usage
 
