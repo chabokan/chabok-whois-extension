@@ -93,7 +93,7 @@ The Extension requires the following permissions:
 If you have any questions or concerns about this Privacy Policy or the Extension's data practices, please contact us at:
 
 **Website**: https://chabokan.net  
-**Support**: https://chabokan.net/contact
+**Support**: https://chabokan.net/contact-us/
 
 ## Compliance
 
